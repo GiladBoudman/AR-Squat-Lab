@@ -25,8 +25,3 @@ This app transforms a standard smartphone into a physics laboratory. It detects 
 3.  **Squat:** Press and **HOLD** the "HOLD TO SQUAT" button. Watch the ball squash down.
 4.  **Jump:** Release the button to launch.
 5.  **Analyze:** Watch the UI text to see the Energy transfer in real-time.
-
-```csharp
-// Example Calculation Logic
-float potentialEnergy = mass * gravity * currentHeight;
-float kineticEnergy = 0.5f * mass * (velocity * velocity);

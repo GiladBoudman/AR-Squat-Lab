@@ -19,6 +19,18 @@ This app transforms a standard smartphone into a physics laboratory. It detects 
 * **Safety Mechanics:** Auto-respawn system if the object clips through the AR plane (anti-tunneling).
 
 
+## ⚠️ Important for New Users
+
+**Why is the scene empty?**
+When you first open this project, the Hierarchy might look empty. This is normal! The `.gitignore` file excludes personal user settings, so Unity doesn't know which scene to open by default.
+
+**How to fix it:**
+1.  Go to the **Project Window** in Unity.
+2.  Navigate to the **Assets** folder (or `Assets/Scenes`).
+3.  Double-click the main scene file (e.g., `MainScene.unity`).
+4.  The hierarchy will populate with the AR setup and scripts.
+
+
 ## 🎮 How to Use
 1.  **Scan:** Point your camera at the floor and move slowly until a grid appears.
 2.  **Spawn:** Tap the grid to place the "Athlete Ball".

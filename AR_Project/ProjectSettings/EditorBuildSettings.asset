@@ -6,8 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/70_mass_scene.unity
+    path: Assets/Scenes/MainMenu.unity
+    guid: 3a85698fc8c029244b4df5f7352549a2
+  - enabled: 1
+    path: Assets/Scenes/SquatAR70.unity
     guid: 4755b35b590504809a7525fd2109c2e2
+  - enabled: 1
+    path: Assets/Scenes/PhysicsInfo.unity
+    guid: ac57426180ce2f548a80126f1ff39eee
+  - enabled: 1
+    path: Assets/Scenes/QuizScene.unity
+    guid: dd8e2c1cb0c3d7e4b8a2c10908316a8b
+  - enabled: 1
+    path: Assets/Scenes/SquatAR70 (Scan).unity
+    guid: 5f8bad5ba752f0846b1310783a55ae90
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 6ee72d15cf39dd748a13eac57397b9af, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 0465d33c6aee55f44b0237db8b0e0259, type: 2}

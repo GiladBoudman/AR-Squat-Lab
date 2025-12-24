@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6849702930281677731}
   - component: {fileID: 9041860646019312024}
   - component: {fileID: 3277735922619116579}
+  - component: {fileID: -8834402752715743680}
   m_Layer: 0
   m_Name: DefaultPlane
   m_TagString: Untagged
@@ -120,7 +121,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f1a110d32af21aa4d872c707dfcc6043, type: 2}
+  - {fileID: 2100000, guid: 8c6cd1163fb936543a1d3ba587a4a82b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -253,3 +254,16 @@ LineRenderer:
   m_UseWorldSpace: 0
   m_Loop: 1
   m_ApplyActiveColorSpace: 1
+--- !u!114 &-8834402752715743680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3722928810156245614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 845a9484f8e79454ba0efc29b0e22266, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloorFilter
+  minDistanceBelowCamera: 1.1

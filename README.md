@@ -10,13 +10,17 @@ A Unity AR application that simulates biomechanical squat jumps using a physics-
 This app transforms a standard smartphone into a physics laboratory. It detects real-world floor planes and spawns a 70 - 90 kg "virtual athlete" (represented by a sphere). The user interacts with the system to simulate a squat (eccentric phase) and a jump (concentric phase), while the app calculates and displays live physics data.
 
 ### Key Features
-* **AR Floor Detection:** Uses AR Foundation to detect and visualize horizontal planes.
+* **Dual Spawning Systems:**
+    * **Scan Mode:** Detects a specific target image (e.g., laptop screen) to spawn the ball floating at eye level.
+    * **Touch Mode:** Detects horizontal floor planes for "tap-to-spawn" functionality.
+* **Interactive Setup:**
+    * **Drag-to-Move:** Users can grab the floating ball to reposition it precisely.
+    * **Auto-Drop:** Releasing the ball enables gravity, causing it to fall and auto-calibrate the floor height ($h=0$).
 * **Charge-to-Jump Mechanic:** "Hold" button to squash the ball (simulate loading legs), "Release" to launch.
-* **Real-Time Physics:** displaying:
-    * **Height ($h$):** Vertical displacement.
+* **Real-Time Physics Display:**
+    * **Height ($h$):** Vertical displacement from the calibrated floor.
     * **Potential Energy ($PE$):** Calculated as $m \cdot g \cdot h$.
     * **Kinetic Energy ($KE$):** Calculated as $\frac{1}{2} m \cdot v^2$.
-* **Safety Mechanics:** Auto-respawn system if the object clips through the AR plane (anti-tunneling).
 
 
 ## ⚠️ Important for New Users
@@ -32,8 +36,17 @@ When you first open this project, the Hierarchy might look empty. This is normal
 
 
 ## 🎮 How to Use
-1.  **Scan:** Point your camera at the floor and move slowly until a grid appears.
-2.  **Spawn:** Tap the grid to place the "Athlete Ball".
-3.  **Squat:** Press and **HOLD** the "HOLD TO SQUAT" button. Watch the ball squash down.
-4.  **Jump:** Release the button to launch.
-5.  **Analyze:** Watch the UI text to see the Energy transfer in real-time.
+### 1. Spawning the Athlete (ball)
+You can choose between two modes from the Main Menu:
+* **Scan Mode:** Point your camera at the designated target image. The ball will appear floating in front of it.
+* **Touch Mode:** Point your camera at the floor until a grid appears, then tap to spawn.
+
+### 2. Positioning (Setup Phase)
+* The ball starts in **Floating Mode** (Gravity OFF).
+* **Drag** the ball with your finger to position it perfectly in your room.
+* **Release** your finger to Drop the ball. It will fall to the floor and set the height to 0.00m.
+
+### 3. Squat & Jump
+* **Squat:** Press and **HOLD** the "Squat" button. The ball will "squash" down to build charge.
+* **Jump:** Release the button to launch the ball upward.
+* **Analyze:** Watch the top-left UI to see the energy values change as the ball travels up and down.

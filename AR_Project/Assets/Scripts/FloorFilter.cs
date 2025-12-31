@@ -8,9 +8,6 @@ public class FloorFilter : MonoBehaviour
     private ARPlane plane;
 
     // A plane must be at least this many meters BELOW the phone to count as a floor.
-    // Tables are usually ~0.8m below your eyes.
-    // Floors are usually ~1.6m below your eyes.
-    // We set the cutoff at 1.1m.
     public float minDistanceBelowCamera = 1.1f;
 
     void Awake()
@@ -22,18 +19,25 @@ public class FloorFilter : MonoBehaviour
 
     void Update()
     {
-        // Safety check
+        // 1. SAFETY: If components are missing, stop
         if (plane == null || plane.subsumedBy != null) return;
 
-        // 1. Calculate height difference
+        // 2. EDITOR OVERRIDE: 
+        // If we are in the Unity Editor, ALWAYS keep the floor solid.
+#if UNITY_EDITOR
+        if (meshCollider) meshCollider.enabled = true;
+        if (meshRenderer) meshRenderer.enabled = true;
+        return; // Stop here, don't run the filter logic below
+#endif
+
+        // 3. REAL APP LOGIC (Phone Only)
         float cameraY = Camera.main.transform.position.y;
         float planeY = transform.position.y;
         float distanceDown = cameraY - planeY;
 
-        // 2. Decide: Is this a floor?
+        // Is this a floor? (Distance > 1.1m)
         bool isFloor = distanceDown > minDistanceBelowCamera;
 
-        // 3. Apply: Turn it ON if it's a floor, OFF if it's a table
         if (meshCollider) meshCollider.enabled = isFloor;
         if (meshRenderer) meshRenderer.enabled = isFloor;
     }

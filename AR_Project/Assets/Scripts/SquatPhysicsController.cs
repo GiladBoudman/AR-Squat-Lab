@@ -15,7 +15,10 @@ public class SquatPhysicsController : MonoBehaviour
     private float floorY;
     private float mass;
 
-    // Flag: "Has the user touched me?" (Used to detach from AR Spawner)
+    // --- NEW: MAX HEIGHT MARKER ---
+    private GameObject highPointMarker;
+    // ------------------------------
+
     public bool isBeingHeld = false;
 
     [Header("Dragging Settings")]
@@ -27,8 +30,6 @@ public class SquatPhysicsController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         ballRenderer = GetComponent<Renderer>();
         mass = rb.mass;
-
-        // Initial floor guess
         floorY = transform.position.y;
 
         if (statsDisplay == null)
@@ -36,6 +37,27 @@ public class SquatPhysicsController : MonoBehaviour
             GameObject textObj = GameObject.Find("StatsText");
             if (textObj != null) statsDisplay = textObj.GetComponent<TextMeshProUGUI>();
         }
+
+        // --- NEW: CREATE THE MARKER AUTOMATICALLY ---
+        CreateHighPointMarker();
+    }
+
+    // Creates a thin red disk to mark the highest point
+    void CreateHighPointMarker()
+    {
+        highPointMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        Destroy(highPointMarker.GetComponent<Collider>()); // Remove physics so ball doesn't hit it
+
+        // Make it a thin disk
+        highPointMarker.transform.localScale = new Vector3(0.4f, 0.01f, 0.4f);
+
+        // Make it Red/Transparent
+        Renderer r = highPointMarker.GetComponent<Renderer>();
+        r.material = new Material(Shader.Find("Standard")); // Standard shader supports transparency
+        r.material.color = new Color(1f, 0f, 0f, 0.5f); // Red with 50% transparency
+
+        // Hide it initially
+        highPointMarker.SetActive(false);
     }
 
     void Update()
@@ -43,14 +65,32 @@ public class SquatPhysicsController : MonoBehaviour
         HandleSquatMechanics();
         CalculateAndDisplayPhysics();
         CheckForFalling();
+        UpdateMaxHeightMarker(); // <--- Check height every frame
+    }
+
+    // --- NEW: PUSH THE MARKER UP ---
+    void UpdateMaxHeightMarker()
+    {
+        if (highPointMarker == null || !highPointMarker.activeSelf) return;
+
+        // Keep the marker aligned with the ball horizontally (X/Z)
+        Vector3 currentMarkerPos = highPointMarker.transform.position;
+        currentMarkerPos.x = transform.position.x;
+        currentMarkerPos.z = transform.position.z;
+
+        // Only push the marker UP (Y), never down
+        if (transform.position.y > currentMarkerPos.y)
+        {
+            currentMarkerPos.y = transform.position.y;
+        }
+
+        highPointMarker.transform.position = currentMarkerPos;
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        // When we land on the floor/table after a drop
         if (rb.useGravity == true && !isCharging)
         {
-            // Only update floor if we stopped moving vertically
             if (Mathf.Abs(rb.linearVelocity.y) < 0.1f)
             {
                 floorY = transform.position.y;
@@ -60,43 +100,36 @@ public class SquatPhysicsController : MonoBehaviour
 
     void OnMouseDown()
     {
-        // 1. Pick up the ball (Gravity OFF, Physics Frozen)
+        // RESET MARKER when grabbing
+        if (highPointMarker != null) highPointMarker.SetActive(false);
+
         rb.useGravity = false;
         rb.isKinematic = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // 2. Detach from AR Spawner
         isBeingHeld = true;
 
-        // 3. Visuals
         if (ballRenderer != null)
             ballRenderer.material.color = Color.green;
 
-        // 4. Dragging Math
         mZCoord = Camera.main.WorldToScreenPoint(gameObject.transform.position).z;
         mOffset = gameObject.transform.position - GetMouseAsWorldPoint();
     }
 
     void OnMouseUp()
     {
-        // 1. Visual Reset
         if (ballRenderer != null)
             ballRenderer.material.color = Color.white;
 
-        // --- NEW FEATURE: AUTO-DROP ---
-        // As soon as you let go, gravity turns ON.
         rb.useGravity = true;
         rb.isKinematic = false;
-
-        // Safety: Ensure it falls straight down (doesn't fly off sideways)
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
     }
 
     void OnMouseDrag()
     {
-        // Only allow dragging if we are holding it (Gravity is OFF)
         if (rb.useGravity == false)
         {
             transform.position = GetMouseAsWorldPoint() + mOffset;
@@ -114,14 +147,14 @@ public class SquatPhysicsController : MonoBehaviour
     {
         if (transform.position.y < floorY - 2.0f)
         {
-            // Reset position if it falls into the void
             transform.position = new Vector3(transform.position.x, floorY + 0.5f, transform.position.z);
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
-
-            // Ensure gravity is on so it falls to the floor again
             rb.useGravity = true;
             rb.isKinematic = false;
+
+            // Hide marker if we fell
+            if (highPointMarker != null) highPointMarker.SetActive(false);
         }
     }
 
@@ -140,8 +173,6 @@ public class SquatPhysicsController : MonoBehaviour
 
     public void StartSquat()
     {
-        // FALLBACK: If the user scans but NEVER touches the ball, 
-        // this button will still drop it for them.
         if (rb.isKinematic == true)
         {
             rb.isKinematic = false;
@@ -150,6 +181,16 @@ public class SquatPhysicsController : MonoBehaviour
         }
 
         if (Mathf.Abs(rb.linearVelocity.y) > 0.1f) return;
+
+        // --- RESET MARKER ON SQUAT START ---
+        if (highPointMarker != null)
+        {
+            highPointMarker.SetActive(true);
+            // Start the marker exactly at the ball's center
+            highPointMarker.transform.position = transform.position;
+        }
+        // -----------------------------------
+
         isCharging = true;
         currentCharge = 0f;
     }
@@ -168,7 +209,6 @@ public class SquatPhysicsController : MonoBehaviour
     private void CalculateAndDisplayPhysics()
     {
         float h = Mathf.Max(0, transform.position.y - floorY);
-
         if (h < 0.01f) h = 0f;
 
         float v = rb.linearVelocity.magnitude;
@@ -177,12 +217,34 @@ public class SquatPhysicsController : MonoBehaviour
 
         if (statsDisplay != null)
         {
+            // Calculate Max Height for display
+            float maxH = 0f;
+            if (highPointMarker != null && highPointMarker.activeSelf)
+            {
+                maxH = Mathf.Max(0, highPointMarker.transform.position.y - floorY);
+            }
+
             statsDisplay.text =
-                $"<b>Height (h):</b> {h:F2} m\n\n" +
+                $"<b>Height:</b> {h:F2} m <color=red>(Max: {maxH:F2})</color>\n\n" +
                 $"<b>PE = m·g·h</b>\n" +
                 $"{mass} · 9.81 · {h:F2} = <color=yellow><b>{pe:F0} J</b></color>\n\n" +
                 $"<b>KE = ½·m·v²</b>\n" +
                 $"0.5 · {mass} · {v:F1}² = <color=yellow><b>{ke:F0} J</b></color>";
         }
+    }
+
+    // --- QUIZ HELPERS ---
+    public float GetMaxHeight()
+    {
+        if (highPointMarker != null && highPointMarker.activeSelf)
+        {
+            return Mathf.Max(0, highPointMarker.transform.position.y - floorY);
+        }
+        return 0f;
+    }
+
+    public void ResetMarker()
+    {
+        if (highPointMarker != null) highPointMarker.SetActive(false);
     }
 }

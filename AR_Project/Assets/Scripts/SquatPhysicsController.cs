@@ -232,4 +232,19 @@ public class SquatPhysicsController : MonoBehaviour
                 $"0.5 · {mass} · {v:F1}² = <color=yellow><b>{ke:F0} J</b></color>";
         }
     }
+
+    // --- QUIZ HELPERS ---
+    public float GetMaxHeight()
+    {
+        if (highPointMarker != null && highPointMarker.activeSelf)
+        {
+            return Mathf.Max(0, highPointMarker.transform.position.y - floorY);
+        }
+        return 0f;
+    }
+
+    public void ResetMarker()
+    {
+        if (highPointMarker != null) highPointMarker.SetActive(false);
+    }
 }

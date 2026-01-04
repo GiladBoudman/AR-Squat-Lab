@@ -65,7 +65,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.XR.ARFoundation::UnityEngine.XR.ARFoundation.ARPlaneMeshVisualizer
   m_TrackingStateVisibilityThreshold: 1
-  m_HideSubsumed: 1
+  m_HideSubsumed: 0
 --- !u!64 &3155271179693692643
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -152,7 +152,7 @@ LineRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3722928810156245614}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -266,4 +266,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 845a9484f8e79454ba0efc29b0e22266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FloorFilter
-  minDistanceBelowCamera: 1.1

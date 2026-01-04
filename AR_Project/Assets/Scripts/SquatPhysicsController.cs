@@ -1,7 +1,9 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.EventSystems;
+using System.Collections;
 
-public class SquatPhysicsController : MonoBehaviour
+public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [Header("Configuration")]
     public float maxJumpForce = 500f;
@@ -14,22 +16,25 @@ public class SquatPhysicsController : MonoBehaviour
     private bool isCharging = false;
     private float floorY;
     private float mass;
-
-    // --- NEW: MAX HEIGHT MARKER ---
     private GameObject highPointMarker;
-    // ------------------------------
-
     public bool isBeingHeld = false;
+    private float distanceFromCamera;
 
-    [Header("Dragging Settings")]
-    private Vector3 mOffset;
-    private float mZCoord;
+    // TRACKING STATE
+    private bool initialFloorFound = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         ballRenderer = GetComponent<Renderer>();
         mass = rb.mass;
+
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        rb.useGravity = false;
+        rb.isKinematic = true;
+
         floorY = transform.position.y;
 
         if (statsDisplay == null)
@@ -38,26 +43,7 @@ public class SquatPhysicsController : MonoBehaviour
             if (textObj != null) statsDisplay = textObj.GetComponent<TextMeshProUGUI>();
         }
 
-        // --- NEW: CREATE THE MARKER AUTOMATICALLY ---
         CreateHighPointMarker();
-    }
-
-    // Creates a thin red disk to mark the highest point
-    void CreateHighPointMarker()
-    {
-        highPointMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        Destroy(highPointMarker.GetComponent<Collider>()); // Remove physics so ball doesn't hit it
-
-        // Make it a thin disk
-        highPointMarker.transform.localScale = new Vector3(0.4f, 0.01f, 0.4f);
-
-        // Make it Red/Transparent
-        Renderer r = highPointMarker.GetComponent<Renderer>();
-        r.material = new Material(Shader.Find("Standard")); // Standard shader supports transparency
-        r.material.color = new Color(1f, 0f, 0f, 0.5f); // Red with 50% transparency
-
-        // Hide it initially
-        highPointMarker.SetActive(false);
     }
 
     void Update()
@@ -65,98 +51,108 @@ public class SquatPhysicsController : MonoBehaviour
         HandleSquatMechanics();
         CalculateAndDisplayPhysics();
         CheckForFalling();
-        UpdateMaxHeightMarker(); // <--- Check height every frame
+        UpdateMaxHeightMarker();
     }
 
-    // --- NEW: PUSH THE MARKER UP ---
-    void UpdateMaxHeightMarker()
+    private void OnCollisionEnter(Collision collision)
     {
-        if (highPointMarker == null || !highPointMarker.activeSelf) return;
-
-        // Keep the marker aligned with the ball horizontally (X/Z)
-        Vector3 currentMarkerPos = highPointMarker.transform.position;
-        currentMarkerPos.x = transform.position.x;
-        currentMarkerPos.z = transform.position.z;
-
-        // Only push the marker UP (Y), never down
-        if (transform.position.y > currentMarkerPos.y)
+        // First landing calibration
+        if (!initialFloorFound)
         {
-            currentMarkerPos.y = transform.position.y;
-        }
+            floorY = transform.position.y;
 
-        highPointMarker.transform.position = currentMarkerPos;
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (rb.useGravity == true && !isCharging)
-        {
-            if (Mathf.Abs(rb.linearVelocity.y) < 0.1f)
+            if (highPointMarker != null)
             {
-                floorY = transform.position.y;
+                Vector3 p = highPointMarker.transform.position;
+                p.y = floorY;
+                highPointMarker.transform.position = p;
             }
+            initialFloorFound = true;
         }
     }
 
-    void OnMouseDown()
+    // --- 1. UI BUTTON LOGIC ---
+
+    public void StartSquat()
     {
-        // RESET MARKER when grabbing
+        if (isBeingHeld) return;
+
+        // RESET MARKER FOR NEW JUMP
+        if (highPointMarker != null)
+        {
+            highPointMarker.SetActive(true);
+
+            // Teleport to ball to start fresh
+            Vector3 resetPos = transform.position;
+            if (initialFloorFound) resetPos.y = floorY;
+            highPointMarker.transform.position = resetPos;
+        }
+
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        isCharging = true;
+        currentCharge = 0f;
+    }
+
+    public void ReleaseJump()
+    {
+        if (isCharging) PerformJump();
+    }
+
+    private void PerformJump()
+    {
+        isCharging = false;
+        transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        float finalForce = currentCharge * maxJumpForce;
+        rb.AddForce(Vector3.up * finalForce, ForceMode.Impulse);
+    }
+
+    // --- 2. BALL TOUCH LOGIC ---
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        // HIDE MARKER WHEN MOVING (New jump logic)
         if (highPointMarker != null) highPointMarker.SetActive(false);
 
-        rb.useGravity = false;
+        isCharging = false;
+        transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        transform.rotation = Quaternion.identity;
+
         rb.isKinematic = true;
+        rb.useGravity = false;
         rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
 
         isBeingHeld = true;
+        if (ballRenderer != null) ballRenderer.material.color = Color.green;
 
-        if (ballRenderer != null)
-            ballRenderer.material.color = Color.green;
-
-        mZCoord = Camera.main.WorldToScreenPoint(gameObject.transform.position).z;
-        mOffset = gameObject.transform.position - GetMouseAsWorldPoint();
+        distanceFromCamera = Vector3.Distance(Camera.main.transform.position, transform.position);
     }
 
-    void OnMouseUp()
+    public void OnDrag(PointerEventData eventData)
     {
-        if (ballRenderer != null)
-            ballRenderer.material.color = Color.white;
+        if (ballRenderer != null) ballRenderer.material.color = Color.green;
+        if (Camera.main != null)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(eventData.position);
+            Vector3 newPos = ray.GetPoint(distanceFromCamera);
+            transform.position = newPos;
+        }
+    }
 
-        rb.useGravity = true;
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (ballRenderer != null) ballRenderer.material.color = Color.white;
+        isBeingHeld = false;
         rb.isKinematic = false;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
+        rb.useGravity = true;
     }
 
-    void OnMouseDrag()
-    {
-        if (rb.useGravity == false)
-        {
-            transform.position = GetMouseAsWorldPoint() + mOffset;
-        }
-    }
-
-    private Vector3 GetMouseAsWorldPoint()
-    {
-        Vector3 mousePoint = Input.mousePosition;
-        mousePoint.z = mZCoord;
-        return Camera.main.ScreenToWorldPoint(mousePoint);
-    }
-
-    private void CheckForFalling()
-    {
-        if (transform.position.y < floorY - 2.0f)
-        {
-            transform.position = new Vector3(transform.position.x, floorY + 0.5f, transform.position.z);
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.useGravity = true;
-            rb.isKinematic = false;
-
-            // Hide marker if we fell
-            if (highPointMarker != null) highPointMarker.SetActive(false);
-        }
-    }
+    // --- MECHANICS ---
 
     private void HandleSquatMechanics()
     {
@@ -171,41 +167,6 @@ public class SquatPhysicsController : MonoBehaviour
         }
     }
 
-    public void StartSquat()
-    {
-        if (rb.isKinematic == true)
-        {
-            rb.isKinematic = false;
-            rb.useGravity = true;
-            return;
-        }
-
-        if (Mathf.Abs(rb.linearVelocity.y) > 0.1f) return;
-
-        // --- RESET MARKER ON SQUAT START ---
-        if (highPointMarker != null)
-        {
-            highPointMarker.SetActive(true);
-            // Start the marker exactly at the ball's center
-            highPointMarker.transform.position = transform.position;
-        }
-        // -----------------------------------
-
-        isCharging = true;
-        currentCharge = 0f;
-    }
-
-    public void ReleaseJump()
-    {
-        if (!isCharging) return;
-        isCharging = false;
-
-        transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-
-        float finalForce = currentCharge * maxJumpForce;
-        rb.AddForce(Vector3.up * finalForce, ForceMode.Impulse);
-    }
-
     private void CalculateAndDisplayPhysics()
     {
         float h = Mathf.Max(0, transform.position.y - floorY);
@@ -217,34 +178,81 @@ public class SquatPhysicsController : MonoBehaviour
 
         if (statsDisplay != null)
         {
-            // Calculate Max Height for display
-            float maxH = 0f;
-            if (highPointMarker != null && highPointMarker.activeSelf)
-            {
-                maxH = Mathf.Max(0, highPointMarker.transform.position.y - floorY);
-            }
-
+            float maxH = GetMaxHeight();
             statsDisplay.text =
-                $"<b>Height:</b> {h:F2} m <color=red>(Max: {maxH:F2})</color>\n\n" +
-                $"<b>PE = m·g·h</b>\n" +
-                $"{mass} · 9.81 · {h:F2} = <color=yellow><b>{pe:F0} J</b></color>\n\n" +
-                $"<b>KE = ½·m·v²</b>\n" +
-                $"0.5 · {mass} · {v:F1}² = <color=yellow><b>{ke:F0} J</b></color>";
+                $"<b>Height:</b> {h:F2} m <color=red>(Max: {maxH:F2})</color>\n" +
+                $"<b>PE = m·g·h</b> = " +
+                $"{mass}·9.81·{h:F2} = <color=yellow><b>{pe:F0} J</b></color>\n" +
+                $"<b>KE = ½·m·v²</b> = " +
+                $"0.5·{mass}·{v:F1}² = <color=yellow><b>{ke:F0} J</b></color>";
         }
     }
 
-    // --- QUIZ HELPERS ---
-    public float GetMaxHeight()
+    void UpdateMaxHeightMarker()
     {
-        if (highPointMarker != null && highPointMarker.activeSelf)
+        if (highPointMarker == null) return;
+
+        // Horizontal sync
+        Vector3 p = highPointMarker.transform.position;
+        p.x = transform.position.x;
+        p.z = transform.position.z;
+
+        // Vertical Logic
+        if (!initialFloorFound)
         {
-            return Mathf.Max(0, highPointMarker.transform.position.y - floorY);
+            p.y = transform.position.y; // Follow down
         }
-        return 0f;
+        else
+        {
+            // Only go UP
+            if (transform.position.y > p.y) p.y = transform.position.y;
+        }
+
+        highPointMarker.transform.position = p;
     }
 
-    public void ResetMarker()
+    private void CheckForFalling()
     {
-        if (highPointMarker != null) highPointMarker.SetActive(false);
+        if (transform.position.y < floorY - 5.0f)
+        {
+            transform.position = new Vector3(transform.position.x, floorY + 1.0f, transform.position.z);
+            rb.linearVelocity = Vector3.zero;
+            rb.useGravity = false;
+            rb.isKinematic = true;
+            initialFloorFound = false;
+        }
+    }
+
+    public float GetMaxHeight() { return highPointMarker != null ? Mathf.Max(0, highPointMarker.transform.position.y - floorY) : 0f; }
+    public void ResetMarker() { if (highPointMarker != null) highPointMarker.SetActive(false); }
+
+    void CreateHighPointMarker()
+    {
+        highPointMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        Destroy(highPointMarker.GetComponent<Collider>());
+        highPointMarker.transform.localScale = new Vector3(0.3f, 0.01f, 0.3f);
+
+        Renderer r = highPointMarker.GetComponent<Renderer>();
+
+        // --- TRANSPARENCY SETUP ---
+        // Create a new material using Standard Shader
+        Material mat = new Material(Shader.Find("Standard"));
+
+        // Force the material into "Fade" or "Transparent" mode
+        mat.SetFloat("_Mode", 3); // 3 = Transparent
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        mat.renderQueue = 3000;
+
+        // Set Color with low Alpha (0.15f is very transparent)
+        mat.color = new Color(1f, 0f, 0f, 0.15f);
+
+        r.material = mat;
+
+        highPointMarker.SetActive(false);
     }
 }

@@ -18,6 +18,9 @@ public class QuizManager : MonoBehaviour
     private SquatPhysicsController physicsController;
     private int currentQuestionIndex = 0;
 
+    // --- FIX: INPUT LOCK ---
+    private bool isAnswering = false; // Locks the game while waiting for the next question
+
     [System.Serializable]
     public class Question
     {
@@ -35,10 +38,8 @@ public class QuizManager : MonoBehaviour
 
     private List<Question> questions = new List<Question>();
 
-    // CALL THIS FROM THE "START QUIZ" BUTTON
     public void StartQuiz()
     {
-        // 1. Find the ball in the scene
         physicsController = FindFirstObjectByType<SquatPhysicsController>();
 
         if (physicsController == null)
@@ -47,19 +48,21 @@ public class QuizManager : MonoBehaviour
             return;
         }
 
-        // 2. Show UI
         quizPanel.SetActive(true);
-
-        // 3. Load Data
         SetupDefaultQuestions();
+
+        // Reset everything
+        isAnswering = false;
         ShowQuestion(0);
     }
 
     void Update()
     {
+        // FIX: If we are already transitioning to the next question, STOP CHECKING PHYSICS
+        if (isAnswering) return;
+
         if (quizPanel.activeSelf && physicsController != null)
         {
-            // Only check physics if we are on a Challenge Question
             if (questions.Count > currentQuestionIndex &&
                 questions[currentQuestionIndex].type == QuestionType.PhysicalChallenge)
             {
@@ -70,6 +73,9 @@ public class QuizManager : MonoBehaviour
 
     void ShowQuestion(int index)
     {
+        // Unlock the door: We are ready for a new answer now
+        isAnswering = false;
+
         currentQuestionIndex = index;
         if (index >= questions.Count)
         {
@@ -95,31 +101,40 @@ public class QuizManager : MonoBehaviour
         }
         else
         {
-            buttonContainer.SetActive(false); // Hide buttons for physical tasks
+            buttonContainer.SetActive(false);
             feedbackText.text = "Perform the action with the ball...";
         }
     }
 
     public void OnAnswerClicked(int index)
     {
+        // FIX: Stop double-clicks or phantom clicks
+        if (isAnswering) return;
+
         if (index == questions[currentQuestionIndex].correctOptionIndex)
         {
+            // LOCK THE GAME
+            isAnswering = true;
+
             Feedback("Correct!");
             Invoke("NextQuestion", 1.5f);
         }
         else
         {
             Feedback("Wrong, try again.");
+            // Note: We DO NOT lock here, so they can try again immediately.
         }
     }
 
     void CheckPhysicalChallenge()
     {
-        // Get height from the ball script
-        float currentMaxHeight = physicsController.GetMaxHeight();
+        // FIX: Stop checking if we already succeeded
+        if (isAnswering) return;
 
-        // Only check if ball has landed (velocity near 0)
+        float currentMaxHeight = physicsController.GetMaxHeight();
         Rigidbody rb = physicsController.GetComponent<Rigidbody>();
+
+        // Check if landed
         if (rb.useGravity && Mathf.Abs(rb.linearVelocity.y) < 0.1f && currentMaxHeight > 0.05f)
         {
             bool success = false;
@@ -127,19 +142,22 @@ public class QuizManager : MonoBehaviour
 
             switch (q.challengeType)
             {
-                case ChallengeType.JumpLow: // Max < 0.5m
+                case ChallengeType.JumpLow:
                     if (currentMaxHeight < q.targetValueMax) success = true;
                     break;
-                case ChallengeType.JumpHigh: // Max > 1.0m
+                case ChallengeType.JumpHigh:
                     if (currentMaxHeight > q.targetValueMin) success = true;
                     break;
-                case ChallengeType.HitTargetRange: // 1.5m < Max < 2.0m
+                case ChallengeType.HitTargetRange:
                     if (currentMaxHeight >= q.targetValueMin && currentMaxHeight <= q.targetValueMax) success = true;
                     break;
             }
 
             if (success)
             {
+                // LOCK THE GAME
+                isAnswering = true;
+
                 Feedback("Great Jump!");
                 physicsController.ResetMarker();
                 Invoke("NextQuestion", 2.0f);
@@ -164,7 +182,6 @@ public class QuizManager : MonoBehaviour
     {
         questions.Clear();
 
-        // Q1: Concept
         questions.Add(new Question
         {
             text = "As the ball travels UP, what happens to its energy?",
@@ -173,8 +190,6 @@ public class QuizManager : MonoBehaviour
             correctOptionIndex = 0
         });
 
-        // Q2: Action (Low Jump)
-        // Challenge: Tap the button quickly. Don't let it charge much.
         questions.Add(new Question
         {
             text = "ACTION: Perform a 'Baby Jump'. Keep Max Height BELOW 0.30 meters.",
@@ -183,7 +198,6 @@ public class QuizManager : MonoBehaviour
             targetValueMax = 0.30f
         });
 
-        // Q3: Concept
         questions.Add(new Question
         {
             text = "At the exact top of the jump (Max Height), what is the velocity?",
@@ -192,8 +206,6 @@ public class QuizManager : MonoBehaviour
             correctOptionIndex = 1
         });
 
-        // Q4: Action (High Jump)
-        // Challenge: Hold the charge almost to the max! (Max is ~0.87m)
         questions.Add(new Question
         {
             text = "ACTION: Generate High Energy! Jump HIGHER than 0.70 meters.",
@@ -202,7 +214,6 @@ public class QuizManager : MonoBehaviour
             targetValueMin = 0.70f
         });
 
-        // Q5: Concept
         questions.Add(new Question
         {
             text = "Which variable does NOT affect the Potential Energy (PE = mgh)?",
@@ -211,8 +222,6 @@ public class QuizManager : MonoBehaviour
             correctOptionIndex = 2
         });
 
-        // Q6: Action (Precision Target)
-        // Challenge: A medium charge. Not too low, not too high.
         questions.Add(new Question
         {
             text = "ACTION: Precision Test! Land exactly between 0.40m and 0.60m.",
@@ -222,13 +231,12 @@ public class QuizManager : MonoBehaviour
             targetValueMax = 0.60f
         });
 
-        // Q7: Concept (Final)
         questions.Add(new Question
         {
             text = "If you double the Jump Height, what happens to the Potential Energy?",
             type = QuestionType.MultipleChoice,
             options = new string[] { "It stays the same", "It Doubles", "It Quadruples" },
-            correctOptionIndex = 1 // Linear relationship
+            correctOptionIndex = 1
         });
     }
 }

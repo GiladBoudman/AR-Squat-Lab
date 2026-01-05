@@ -184,23 +184,24 @@ public class QuizManager : MonoBehaviour
 
         questions.Add(new Question
         {
-            text = "As the ball travels UP, what happens to its energy?",
+            text = "As the ball flies <color=yellow><b>UP</b></color>, what happens to its energy?",
             type = QuestionType.MultipleChoice,
-            options = new string[] { "KE turns into Potential", "PE turns into Kinetic", "Energy is lost" },
+            options = new string[] { "KE turns into Potential Energy", "PE turns into Kinetic Energy", "Energy is lost" },
             correctOptionIndex = 0
         });
 
         questions.Add(new Question
         {
-            text = "ACTION: Perform a 'Baby Jump'. Keep Max Height BELOW 0.30 meters.",
+            text = "MISSION: Tiny Hop! Jump <color=#FF00FF>LOWER</color> than 0.30 meters.",
             type = QuestionType.PhysicalChallenge,
             challengeType = ChallengeType.JumpLow,
-            targetValueMax = 0.30f
+            targetValueMax = 0.30f,
+            targetValueMin = 0.05f
         });
 
         questions.Add(new Question
         {
-            text = "At the exact top of the jump (Max Height), what is the velocity?",
+            text = "At the <color=orange>MAXIMUM</color> height of the jump (the very top), what is the speed of the ball?",
             type = QuestionType.MultipleChoice,
             options = new string[] { "Maximum", "0 m/s", "9.81 m/s" },
             correctOptionIndex = 1
@@ -208,7 +209,7 @@ public class QuizManager : MonoBehaviour
 
         questions.Add(new Question
         {
-            text = "ACTION: Generate High Energy! Jump HIGHER than 0.70 meters.",
+            text = "MISSION: Super Jump! Blast <color=red>Higher</color> than 0.70 meters!",
             type = QuestionType.PhysicalChallenge,
             challengeType = ChallengeType.JumpHigh,
             targetValueMin = 0.70f
@@ -216,7 +217,7 @@ public class QuizManager : MonoBehaviour
 
         questions.Add(new Question
         {
-            text = "Which variable does NOT affect the Potential Energy (PE = mgh)?",
+            text = "Which variable does <color=#00FFFF>NOT</color> affect the Potential Energy (PE = m · g · h)?",
             type = QuestionType.MultipleChoice,
             options = new string[] { "Mass", "Height", "Velocity" },
             correctOptionIndex = 2
@@ -224,7 +225,7 @@ public class QuizManager : MonoBehaviour
 
         questions.Add(new Question
         {
-            text = "ACTION: Precision Test! Land exactly between 0.40m and 0.60m.",
+            text = "MISSION: Bullseye! Jump <color=green>BETWEEN</color> 0.40m and 0.60m.",
             type = QuestionType.PhysicalChallenge,
             challengeType = ChallengeType.HitTargetRange,
             targetValueMin = 0.40f,
@@ -233,7 +234,7 @@ public class QuizManager : MonoBehaviour
 
         questions.Add(new Question
         {
-            text = "If you double the Jump Height, what happens to the Potential Energy?",
+            text = "If you jump <color=#8470FF>TWICE</color> as high, what happens to your Potential Energy?",
             type = QuestionType.MultipleChoice,
             options = new string[] { "It stays the same", "It Doubles", "It Quadruples" },
             correctOptionIndex = 1

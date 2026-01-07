@@ -11,7 +11,11 @@ This app transforms a standard smartphone into a physics laboratory. It detects 
 
 ## 🎥 Demo Preview
 
-![Demo GIF](https://github.com/user-attachments/assets/c56eb89e-fdf4-4834-9c67-f334f5fb2afd)
+<div align="center">
+  <a href="https://github.com/user-attachments/assets/c56eb89e-fdf4-4834-9c67-f334f5fb2afd">
+    <video src="https://github.com/user-attachments/assets/c56eb89e-fdf4-4834-9c67-f334f5fb2afd" width="400" />
+  </a>
+</div>
 
 ### Key Features
 * **Dual Spawning Systems:**

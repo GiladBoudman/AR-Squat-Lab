@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
+/// <summary>
+/// This component ensures that the floor plane remains visible and collidable
+/// </summary>
 public class FloorFilter : MonoBehaviour
 {
     private MeshRenderer meshRenderer;
@@ -17,10 +20,6 @@ public class FloorFilter : MonoBehaviour
     void Update()
     {
         if (plane == null || plane.subsumedBy != null) return;
-
-        // FIX: Removed the "minDistance" check entirely.
-        // The floor is ALWAYS valid, even if you sit on it or the camera is at height 0.
-
         if (meshCollider) meshCollider.enabled = true;
         if (meshRenderer) meshRenderer.enabled = true;
     }

@@ -1,12 +1,15 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.UI; // Needed for UI elements
+using UnityEngine.UI;
 
+/// <summary>
+/// This component animates child card objects to pop up in a cascading sequence when the scene starts.
+/// </summary>
 public class CardAnimator : MonoBehaviour
 {
     [Header("Settings")]
-    public float animationSpeed = 0.1f; // How fast they pop in sequence
-    public float slideDuration = 0.3f; // How long the slide takes per card
+    public float animationSpeed = 0.1f; // How fast the cards pop up in sequence
+    public float slideDuration = 0.3f; // How long each card takes to pop up
 
     void Start()
     {
@@ -17,10 +20,9 @@ public class CardAnimator : MonoBehaviour
     IEnumerator AnimateCards()
     {
         // Get all the child cards attached to this object
-        // We skip "transform" (which is the parent itself) and grab only children
         int childCount = transform.childCount;
 
-        // Hide them all initially
+        // Hide all cards initially
         for (int i = 0; i < childCount; i++)
         {
             Transform card = transform.GetChild(i);
@@ -28,15 +30,15 @@ public class CardAnimator : MonoBehaviour
             card.localScale = Vector3.zero;
         }
 
-        // Animate them one by one
+        // Animate each card in sequence
         for (int i = 0; i < childCount; i++)
         {
             Transform card = transform.GetChild(i);
 
-            // Start the "Pop Up" motion for this specific card
+            // Start the pop up motion for this specific card
             StartCoroutine(PopUpCard(card));
 
-            // Wait a tiny bit before triggering the next one (The "Cascade" effect)
+            // Making the cascade effect by waiting before starting the next one
             yield return new WaitForSeconds(animationSpeed);
         }
     }
@@ -49,7 +51,7 @@ public class CardAnimator : MonoBehaviour
         {
             timer += Time.deltaTime / slideDuration;
 
-            // "SmoothStep" makes the movement start slow, go fast, end slow
+            // Makes the movement start slow, go fast, end slow
             float scale = Mathf.SmoothStep(0, 1, timer);
 
             card.localScale = new Vector3(scale, scale, scale);

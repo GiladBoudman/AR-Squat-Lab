@@ -3,6 +3,10 @@ using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
+/// <summary>
+/// This component manages a quiz system that combines
+/// multiple-choice questions and physical challenges using the SquatPhysicsController.
+/// </summary>
 public class QuizManager : MonoBehaviour
 {
     [Header("References")]
@@ -18,7 +22,6 @@ public class QuizManager : MonoBehaviour
     private SquatPhysicsController physicsController;
     private int currentQuestionIndex = 0;
 
-    // --- FIX: INPUT LOCK ---
     private bool isAnswering = false; // Locks the game while waiting for the next question
 
     [System.Serializable]
@@ -58,7 +61,7 @@ public class QuizManager : MonoBehaviour
 
     void Update()
     {
-        // FIX: If we are already transitioning to the next question, STOP CHECKING PHYSICS
+        // If we are already transitioning to the next question dont check physics
         if (isAnswering) return;
 
         if (quizPanel.activeSelf && physicsController != null)
@@ -73,7 +76,7 @@ public class QuizManager : MonoBehaviour
 
     void ShowQuestion(int index)
     {
-        // Unlock the door: We are ready for a new answer now
+        // Answering lock
         isAnswering = false;
 
         currentQuestionIndex = index;
@@ -108,12 +111,12 @@ public class QuizManager : MonoBehaviour
 
     public void OnAnswerClicked(int index)
     {
-        // FIX: Stop double-clicks or phantom clicks
+        // Stop double clicks or phantom clicks
         if (isAnswering) return;
 
         if (index == questions[currentQuestionIndex].correctOptionIndex)
         {
-            // LOCK THE GAME
+            // Lock the game
             isAnswering = true;
 
             Feedback("Correct!");
@@ -122,13 +125,12 @@ public class QuizManager : MonoBehaviour
         else
         {
             Feedback("Wrong, try again.");
-            // Note: We DO NOT lock here, so they can try again immediately.
         }
     }
 
     void CheckPhysicalChallenge()
     {
-        // FIX: Stop checking if we already succeeded
+        // Stop checking if we already succeeded
         if (isAnswering) return;
 
         float currentMaxHeight = physicsController.GetMaxHeight();
@@ -155,7 +157,7 @@ public class QuizManager : MonoBehaviour
 
             if (success)
             {
-                // LOCK THE GAME
+                // Lock the game
                 isAnswering = true;
 
                 Feedback("Great Jump!");
@@ -186,7 +188,7 @@ public class QuizManager : MonoBehaviour
         {
             text = "As the ball flies <color=yellow><b>UP</b></color>, what happens to its energy?",
             type = QuestionType.MultipleChoice,
-            options = new string[] { "KE turns into Potential Energy", "PE turns into Kinetic Energy", "Energy is lost" },
+            options = new string[] { "KE turns into PE", "PE turns into KE", "Energy is lost" },
             correctOptionIndex = 0
         });
 

@@ -3,6 +3,9 @@ using TMPro;
 using UnityEngine.EventSystems;
 using System.Collections;
 
+/// <summary>
+/// This component manages the squat and jump mechanics of a physics ball.
+/// </summary>
 public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [Header("Configuration")]
@@ -20,7 +23,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
     public bool isBeingHeld = false;
     private float distanceFromCamera;
 
-    // TRACKING STATE
+    // To ensure we only calibrate floor once
     private bool initialFloorFound = false;
 
     void Start()
@@ -71,13 +74,12 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
-    // --- 1. UI BUTTON LOGIC ---
-
+    // Squat and Jump Logic
     public void StartSquat()
     {
         if (isBeingHeld) return;
 
-        // RESET MARKER FOR NEW JUMP
+        // Reset high point marker
         if (highPointMarker != null)
         {
             highPointMarker.SetActive(true);
@@ -100,6 +102,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         if (isCharging) PerformJump();
     }
 
+    // Use impulse force to jump
     private void PerformJump()
     {
         isCharging = false;
@@ -112,11 +115,10 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         rb.AddForce(Vector3.up * finalForce, ForceMode.Impulse);
     }
 
-    // --- 2. BALL TOUCH LOGIC ---
-
+    // Hold the ball to drag
     public void OnPointerDown(PointerEventData eventData)
     {
-        // HIDE MARKER WHEN MOVING (New jump logic)
+        // Hide high point marker while holding the ball
         if (highPointMarker != null) highPointMarker.SetActive(false);
 
         isCharging = false;
@@ -133,6 +135,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         distanceFromCamera = Vector3.Distance(Camera.main.transform.position, transform.position);
     }
 
+    // Drag the ball
     public void OnDrag(PointerEventData eventData)
     {
         if (ballRenderer != null) ballRenderer.material.color = Color.green;
@@ -144,6 +147,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
+    // Release the ball
     public void OnPointerUp(PointerEventData eventData)
     {
         if (ballRenderer != null) ballRenderer.material.color = Color.white;
@@ -152,8 +156,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         rb.useGravity = true;
     }
 
-    // --- MECHANICS ---
-
+    // Squat visual effect while charging the jump
     private void HandleSquatMechanics()
     {
         if (isCharging)
@@ -167,6 +170,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
+    // Physics calculations and display
     private void CalculateAndDisplayPhysics()
     {
         float h = Mathf.Max(0, transform.position.y - floorY);
@@ -188,6 +192,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
+    // Max Height Marker Logic
     void UpdateMaxHeightMarker()
     {
         if (highPointMarker == null) return;
@@ -197,20 +202,21 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         p.x = transform.position.x;
         p.z = transform.position.z;
 
-        // Vertical Logic
+        // If we havent landed yet follow the ball down 
         if (!initialFloorFound)
         {
             p.y = transform.position.y; // Follow down
         }
         else
         {
-            // Only go UP
+            // 
             if (transform.position.y > p.y) p.y = transform.position.y;
         }
 
         highPointMarker.transform.position = p;
     }
 
+    // Reset if falling too far
     private void CheckForFalling()
     {
         if (transform.position.y < floorY - 5.0f)
@@ -226,6 +232,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
     public float GetMaxHeight() { return highPointMarker != null ? Mathf.Max(0, highPointMarker.transform.position.y - floorY) : 0f; }
     public void ResetMarker() { if (highPointMarker != null) highPointMarker.SetActive(false); }
 
+    // Create the high point marker
     void CreateHighPointMarker()
     {
         highPointMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -234,12 +241,11 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
 
         Renderer r = highPointMarker.GetComponent<Renderer>();
 
-        // --- TRANSPARENCY SETUP ---
         // Create a new material using Standard Shader
         Material mat = new Material(Shader.Find("Standard"));
 
-        // Force the material into "Fade" or "Transparent" mode
-        mat.SetFloat("_Mode", 3); // 3 = Transparent
+        // Force the material into transparent mode
+        mat.SetFloat("_Mode", 3);
         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
         mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
         mat.SetInt("_ZWrite", 0);
@@ -248,7 +254,7 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
         mat.renderQueue = 3000;
 
-        // Set Color with low Alpha (0.15f is very transparent)
+        // Set Color with low alpha
         mat.color = new Color(1f, 0f, 0f, 0.15f);
 
         r.material = mat;

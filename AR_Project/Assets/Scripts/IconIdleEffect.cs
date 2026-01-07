@@ -1,10 +1,13 @@
 using UnityEngine;
 
+/// <summary>
+/// This component makes an icon float, pulse, and wiggle for a lively idle effect
+/// </summary>
 public class IconIdleEffect : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float floatSpeed = 2f;       // How fast it moves up/down
-    public float floatStrength = 10f;   // How far it moves (in pixels)
+    public float floatStrength = 10f;   // How far it moves 
 
     [Header("Pulse Settings")]
     public float pulseSpeed = 3f;       // How fast it grows/shrinks
@@ -30,16 +33,13 @@ public class IconIdleEffect : MonoBehaviour
 
     void Update()
     {
-        // 1. FLOATING (Up and Down)
-        // We use Mathf.Sin to create a smooth wave pattern
+        // For each frame, we will apply 3 effects: Floating, Pulsing, and Wiggling
         float newY = originalPos.y + Mathf.Sin((Time.time + randomOffset) * floatSpeed) * floatStrength;
         transform.localPosition = new Vector3(originalPos.x, newY, originalPos.z);
 
-        // 2. PULSING (Grow and Shrink)
         float scaleChange = Mathf.Sin((Time.time + randomOffset) * pulseSpeed) * pulseStrength;
         transform.localScale = originalScale + (Vector3.one * scaleChange);
 
-        // 3. WIGGLE (Rotate slightly left/right)
         float zRotation = Mathf.Sin((Time.time + randomOffset) * rotateSpeed) * rotateAngle;
         transform.localRotation = Quaternion.Euler(0, 0, zRotation);
     }

@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// This component handles navigation between different scenes in the application.
+/// </summary>
 public class SceneNavigator : MonoBehaviour
 {
     public void LoadARScene()
@@ -16,11 +19,6 @@ public class SceneNavigator : MonoBehaviour
     public void LoadPhysicsScene()
     {
         SceneManager.LoadScene("PhysicsInfo");
-    }
-
-    public void LoadQuizScene()
-    {
-        SceneManager.LoadScene("QuizScene");
     }
 
     public void LoadMainMenu()

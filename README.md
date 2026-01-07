@@ -9,6 +9,10 @@ A Unity AR application that simulates biomechanical squat jumps using a physics-
 
 This app transforms a standard smartphone into a physics laboratory. It detects real-world floor planes and spawns a 70 kg "virtual athlete" (represented by a sphere). The user interacts with the system to simulate a squat (eccentric phase) and a jump (concentric phase), while the app calculates and displays live physics data.
 
+## 🎥 Demo Preview
+
+![Demo GIF](https://github.com/user-attachments/assets/c56eb89e-fdf4-4834-9c67-f334f5fb2afd)
+
 ### Key Features
 * **Dual Spawning Systems:**
     * **Scan Mode:** Detects a specific target image (e.g., laptop screen) to spawn the ball floating at eye level.

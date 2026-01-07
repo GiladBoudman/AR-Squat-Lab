@@ -29,3 +29,13 @@ MonoBehaviour:
     m_SpecifySize: 1
     m_Name: EarthBallTrigger
     m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5077855430536819993
+      m_GuidHigh: 15053170846001789366
+    m_SerializedTextureGuid:
+      m_GuidLow: 649713667616549013
+      m_GuidHigh: 10219661833232346859
+    m_Size: {x: 0.25, y: 0.25}
+    m_SpecifySize: 1
+    m_Name: Earth2
+    m_Texture: {fileID: 0}

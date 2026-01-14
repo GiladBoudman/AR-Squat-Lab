@@ -180,10 +180,10 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
             float Epf = mass * 9.81f * maxH;
 
             statsDisplay.text =
-                $"<b>v0 (Launch):</b> {storedV0:F2} m/s\n" +
-                $"<b>Ek0 (Initial):</b> <color=yellow>{storedEk0:F0} J</color>\n" +
-                $"<b>Epf (Final):</b> <color=green>{Epf:F0} J</color>\n" +
-                $"<size=80%>(Ek0 ≈ Epf)</size>";
+                $"<b>v<sub><size=125%>0</size></sub> (Launch):</b> {storedV0:F2} m/s\n" +
+                $"<b>EK<sub><size=125%>0</size></sub> (Initial):</b> <color=yellow>{storedEk0:F0} J</color>\n" +
+                $"<b>EP<sub><size=125%>f</size></sub> (Final):</b> <color=green>{Epf:F0} J</color>\n" +
+                $"(EK<sub><size=125%>0</size></sub> ≈ EP<sub><size=125%>f</size></sub>)";
         }
         else
         {

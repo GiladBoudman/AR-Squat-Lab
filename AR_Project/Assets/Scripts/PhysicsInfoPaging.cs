@@ -1,6 +1,9 @@
 using UnityEngine;
 using TMPro;
 
+/// <summary>
+/// Handles pagination between two pages of physics information in the UI.
+/// </summary>
 public class PhysicsInfoPaging : MonoBehaviour
 {
     [Header("Pages")]
@@ -14,14 +17,14 @@ public class PhysicsInfoPaging : MonoBehaviour
 
     public void TogglePages()
     {
-        // 1. Switch the boolean flag
+        // Switch the boolean flag
         isOnPageTwo = !isOnPageTwo;
 
-        // 2. Toggle visibility (This triggers OnEnable in CardAnimator!)
+        // Toggle visibility (This triggers OnEnable in CardAnimator!)
         page1.SetActive(!isOnPageTwo);
         page2.SetActive(isOnPageTwo);
 
-        // 3. Update Button Text
+        // Update Button Text
         if (buttonText != null)
         {
             buttonText.text = isOnPageTwo ? "Previous Page" : "Next Page";

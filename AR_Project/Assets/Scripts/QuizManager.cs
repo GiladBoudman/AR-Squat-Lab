@@ -227,7 +227,7 @@ public class QuizManager : MonoBehaviour
 
         questions.Add(new Question
         {
-            text = "MISSION: Bullseye! Jump <color=green>BETWEEN</color> 0.40m and 0.60m.",
+            text = "MISSION: Bullseye! Jump <color=#E73E9F>BETWEEN</color> 0.40m and 0.60m.",
             type = QuestionType.PhysicalChallenge,
             challengeType = ChallengeType.HitTargetRange,
             targetValueMin = 0.40f,

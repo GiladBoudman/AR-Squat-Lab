@@ -11,9 +11,9 @@ public class CardAnimator : MonoBehaviour
     public float animationSpeed = 0.1f; // How fast the cards pop up in sequence
     public float slideDuration = 0.3f; // How long each card takes to pop up
 
-    void Start()
+    void OnEnable() // Changed from Start() to OnEnable()
     {
-        // Automatically start the animation when the scene opens
+        // Now this happens every time the page is set to Active
         StartCoroutine(AnimateCards());
     }
 

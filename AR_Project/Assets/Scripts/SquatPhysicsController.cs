@@ -1,7 +1,11 @@
-using UnityEngine;
+using OpenCover.Framework.Model;
 using TMPro;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// This component manages the squat-and-jump mechanics of a ball
+/// </summary>
 public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [Header("Configuration")]
@@ -19,8 +23,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
     public bool isBeingHeld = false;
     private float distanceFromCamera;
     private bool initialFloorFound = false;
-
-    // --- NEW: Energy Conservation Variables ---
     private bool showConservationMode = false;
     private float storedV0 = 0f;   // Initial Velocity
     private float storedEk0 = 0f;  // Initial Kinetic Energy
@@ -71,7 +73,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
-    // --- NEW: Button Function ---
     public void ToggleEnergyMode()
     {
         showConservationMode = !showConservationMode;
@@ -115,7 +116,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         // Apply Force
         rb.AddForce(Vector3.up * impulse, ForceMode.Impulse);
 
-        // --- NEW: Capture Initial Values Immediately ---
         // Impulse J = m * delta_v  =>  v = J / m
         storedV0 = impulse / mass;
 
@@ -178,7 +178,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         if (showConservationMode)
         {
             // MODE 2: Conservation View
-            // Ep_final = m * g * h_max
             float Epf = mass * 9.81f * maxH;
 
             statsDisplay.text =
@@ -189,15 +188,17 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
         else
         {
-            //  MODE 1: Real-Time View 
+            // MODE 1: Real-Time View 
             float v = rb.linearVelocity.magnitude;
             float pe = mass * 9.81f * h;
             float ke = 0.5f * mass * (v * v);
 
             statsDisplay.text =
                 $"<b>Height:</b> {h:F2} m <color=red>(Max: {maxH:F2})</color>\n" +
-                $"<b>PE:</b> {pe:F0} J\n" +
-                $"<b>KE:</b> {ke:F0} J";
+
+                $"<b>Potential Energy (mgh):</b> <color=yellow>{pe:F0} J</color>\n" +
+
+                $"<b>Kinteic Energy (½mv²):</b> <color=green>{ke:F0} J</color>\n";
         }
     }
 

@@ -24,7 +24,7 @@ public class PhysicsInfoPaging : MonoBehaviour
         // 3. Update Button Text
         if (buttonText != null)
         {
-            buttonText.text = isOnPageTwo ? "Back" : "Next Page";
+            buttonText.text = isOnPageTwo ? "Previous Page" : "Next Page";
         }
     }
 }

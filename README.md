@@ -49,14 +49,17 @@ You can choose between two modes from the Main Menu:
 * **Touch Mode:** Point your camera at the floor until a grid appears, then tap to spawn.
 
 ### 2. Positioning (Setup Phase)
-* The ball starts in **Floating Mode** (Gravity OFF).
+* If using Scan Mode, the ball starts in **Floating Mode** (Gravity OFF).
 * **Drag** the ball with your finger to position it precisely in your room.
 * **Release** your finger to Drop the ball. It will fall to the floor and calibrate the height to 0.00m.
 
 ### 3. Squat & Jump
 * **Squat:** Press and **HOLD** the "Squat" button. The ball will "squash" down to build charge.
 * **Jump:** Release the button to launch the ball upward.
-* **Analyze:** Watch the marker to see your max height, and check the top-left UI for energy values.
+* **Analyze:**
+    * **Live Data:** By default, see real-time Height, Potential Energy ($PE$), and Kinetic Energy ($KE$).
+    * **Conservation Mode:** Tap the **"Energy / Data"** button to switch views. This compares your **Initial Kinetic Energy ($E_{k0}$)** at launch against your     **Final Potential Energy ($E_{pf}$)** at the peak to prove energy conservation.
+    * **Marker:** A pink disk automatically marks the max height of every jump.
 
 ### 4. Take the Quiz
 * Tap the **"Take Quiz"** button in either mode.

@@ -20,6 +20,17 @@ public class UIBridge : MonoBehaviour
         if (ballPhysics != null) ballPhysics.ReleaseJump();
     }
 
+    // Called when the user toggles the energy mode button
+    public void OnToggleEnergy()
+    {
+        FindBall(); // Ensure we have found the ball
+        
+        if (ballPhysics != null) 
+        {
+            ballPhysics.ToggleEnergyMode(); // Call the toggle function
+        }
+    }
+
     // Finds the ball in the scene if we haven't already
     private void FindBall()
     {

@@ -1,11 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.EventSystems;
-using System.Collections;
 
-/// <summary>
-/// This component manages the squat and jump mechanics of a physics ball.
-/// </summary>
 public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [Header("Configuration")]
@@ -22,9 +18,12 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
     private GameObject highPointMarker;
     public bool isBeingHeld = false;
     private float distanceFromCamera;
-
-    // To ensure we only calibrate floor once
     private bool initialFloorFound = false;
+
+    // --- NEW: Energy Conservation Variables ---
+    private bool showConservationMode = false;
+    private float storedV0 = 0f;   // Initial Velocity
+    private float storedEk0 = 0f;  // Initial Kinetic Energy
 
     void Start()
     {
@@ -34,12 +33,12 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
 
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
-
         rb.useGravity = false;
         rb.isKinematic = true;
 
         floorY = transform.position.y;
 
+        // Auto-find text if missing
         if (statsDisplay == null)
         {
             GameObject textObj = GameObject.Find("StatsText");
@@ -59,11 +58,9 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
 
     private void OnCollisionEnter(Collision collision)
     {
-        // First landing calibration
         if (!initialFloorFound)
         {
             floorY = transform.position.y;
-
             if (highPointMarker != null)
             {
                 Vector3 p = highPointMarker.transform.position;
@@ -74,17 +71,20 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
-    // Squat and Jump Logic
+    // --- NEW: Button Function ---
+    public void ToggleEnergyMode()
+    {
+        showConservationMode = !showConservationMode;
+    }
+
     public void StartSquat()
     {
         if (isBeingHeld) return;
 
-        // Reset high point marker
+        // Reset marker for new attempt
         if (highPointMarker != null)
         {
             highPointMarker.SetActive(true);
-
-            // Teleport to ball to start fresh
             Vector3 resetPos = transform.position;
             if (initialFloorFound) resetPos.y = floorY;
             highPointMarker.transform.position = resetPos;
@@ -92,7 +92,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
 
         rb.isKinematic = false;
         rb.useGravity = true;
-
         isCharging = true;
         currentCharge = 0f;
     }
@@ -102,7 +101,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         if (isCharging) PerformJump();
     }
 
-    // Use impulse force to jump
     private void PerformJump()
     {
         isCharging = false;
@@ -111,31 +109,34 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         rb.isKinematic = false;
         rb.useGravity = true;
 
-        float finalForce = currentCharge * maxJumpForce;
-        rb.AddForce(Vector3.up * finalForce, ForceMode.Impulse);
+        // Calculate Impulse Force
+        float impulse = currentCharge * maxJumpForce;
+
+        // Apply Force
+        rb.AddForce(Vector3.up * impulse, ForceMode.Impulse);
+
+        // --- NEW: Capture Initial Values Immediately ---
+        // Impulse J = m * delta_v  =>  v = J / m
+        storedV0 = impulse / mass;
+
+        // Ek0 = 0.5 * m * v0^2
+        storedEk0 = 0.5f * mass * (storedV0 * storedV0);
     }
 
-    // Hold the ball to drag
     public void OnPointerDown(PointerEventData eventData)
     {
-        // Hide high point marker while holding the ball
         if (highPointMarker != null) highPointMarker.SetActive(false);
-
         isCharging = false;
         transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
         transform.rotation = Quaternion.identity;
-
         rb.isKinematic = true;
         rb.useGravity = false;
         rb.linearVelocity = Vector3.zero;
-
         isBeingHeld = true;
         if (ballRenderer != null) ballRenderer.material.color = Color.green;
-
         distanceFromCamera = Vector3.Distance(Camera.main.transform.position, transform.position);
     }
 
-    // Drag the ball
     public void OnDrag(PointerEventData eventData)
     {
         if (ballRenderer != null) ballRenderer.material.color = Color.green;
@@ -147,7 +148,6 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
-    // Release the ball
     public void OnPointerUp(PointerEventData eventData)
     {
         if (ballRenderer != null) ballRenderer.material.color = Color.white;
@@ -156,67 +156,62 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         rb.useGravity = true;
     }
 
-    // Squat visual effect while charging the jump
     private void HandleSquatMechanics()
     {
         if (isCharging)
         {
             currentCharge += Time.deltaTime * chargeSpeed;
             currentCharge = Mathf.Clamp01(currentCharge);
-
             float squash = Mathf.Lerp(1f, 0.6f, currentCharge);
             float stretch = Mathf.Lerp(1f, 1.2f, currentCharge);
             transform.localScale = new Vector3(0.2f * stretch, 0.2f * squash, 0.2f * stretch);
         }
     }
 
-    // Physics calculations and display
     private void CalculateAndDisplayPhysics()
     {
+        if (statsDisplay == null) return;
+
         float h = Mathf.Max(0, transform.position.y - floorY);
-        if (h < 0.01f) h = 0f;
+        float maxH = GetMaxHeight();
 
-        float v = rb.linearVelocity.magnitude;
-        float pe = mass * 9.81f * h;
-        float ke = 0.5f * mass * (v * v);
-
-        if (statsDisplay != null)
+        if (showConservationMode)
         {
-            float maxH = GetMaxHeight();
+            // MODE 2: Conservation View
+            // Ep_final = m * g * h_max
+            float Epf = mass * 9.81f * maxH;
+
             statsDisplay.text =
-                $"<b>Height:</b> {h:F2} m <color=red>(Max: {maxH:F2})</color>\n" +
-                $"<b>PE = m·g·h</b> = " +
-                $"{mass}·9.81·{h:F2} = <color=yellow><b>{pe:F0} J</b></color>\n" +
-                $"<b>KE = ½·m·v²</b> = " +
-                $"0.5·{mass}·{v:F1}² = <color=yellow><b>{ke:F0} J</b></color>";
-        }
-    }
-
-    // Max Height Marker Logic
-    void UpdateMaxHeightMarker()
-    {
-        if (highPointMarker == null) return;
-
-        // Horizontal sync
-        Vector3 p = highPointMarker.transform.position;
-        p.x = transform.position.x;
-        p.z = transform.position.z;
-
-        // If we havent landed yet follow the ball down 
-        if (!initialFloorFound)
-        {
-            p.y = transform.position.y; // Follow down
+                $"<b>v0 (Launch):</b> {storedV0:F2} m/s\n" +
+                $"<b>Ek0 (Initial):</b> <color=yellow>{storedEk0:F0} J</color>\n" +
+                $"<b>Epf (Final):</b> <color=green>{Epf:F0} J</color>\n" +
+                $"<size=80%>(Ek0 â‰ˆ Epf)</size>";
         }
         else
         {
-            // 
-            if (transform.position.y > p.y) p.y = transform.position.y;
-        }
+            //  MODE 1: Real-Time View 
+            float v = rb.linearVelocity.magnitude;
+            float pe = mass * 9.81f * h;
+            float ke = 0.5f * mass * (v * v);
 
+            statsDisplay.text =
+                $"<b>Height:</b> {h:F2} m <color=red>(Max: {maxH:F2})</color>\n" +
+                $"<b>PE:</b> {pe:F0} J\n" +
+                $"<b>KE:</b> {ke:F0} J";
+        }
+    }
+
+    void UpdateMaxHeightMarker()
+    {
+        if (highPointMarker == null) return;
+        Vector3 p = highPointMarker.transform.position;
+        p.x = transform.position.x;
+        p.z = transform.position.z;
+        if (!initialFloorFound) p.y = transform.position.y;
+        else if (transform.position.y > p.y) p.y = transform.position.y;
         highPointMarker.transform.position = p;
     }
 
-    // Reset if falling too far
     private void CheckForFalling()
     {
         if (transform.position.y < floorY - 5.0f)
@@ -229,10 +224,10 @@ public class SquatPhysicsController : MonoBehaviour, IPointerDownHandler, IPoint
         }
     }
 
-    public float GetMaxHeight() { return highPointMarker != null ? Mathf.Max(0, highPointMarker.transform.position.y - floorY) : 0f; }
+    public float GetMaxHeight() => highPointMarker != null ? Mathf.Max(0, highPointMarker.transform.position.y - floorY) : 0f;
     public void ResetMarker() { if (highPointMarker != null) highPointMarker.SetActive(false); }
 
-    // Create the high point marker
+    // Marker Creation Code 
     void CreateHighPointMarker()
     {
         highPointMarker = GameObject.CreatePrimitive(PrimitiveType.Cylinder);

@@ -12,12 +12,15 @@ This app transforms a standard smartphone into a physics laboratory. It detects 
 ## 🎥 Demo Preview
 
 <div align="center">
-  <a href="https://github.com/user-attachments/assets/c56eb89e-fdf4-4834-9c67-f334f5fb2afd">
-    <video src="https://github.com/user-attachments/assets/c56eb89e-fdf4-4834-9c67-f334f5fb2afd" width="400" />
+  <a href="https://github.com/user-attachments/assets/50881ec2-5be9-48f1-9981-6fc0b651b14e">
+    <video src="https://github.com/user-attachments/assets/50881ec2-5be9-48f1-9981-6fc0b651b14e" width="400" />
   </a>
 </div>
-
 ### Key Features
+
+
+
+
 * **Dual Spawning Systems:**
     * **Scan Mode:** Detects a specific target image (e.g., laptop screen) to spawn the ball floating at eye level.
     * **Touch Mode:** Detects horizontal floor planes for "tap-to-spawn" functionality.

@@ -12,8 +12,8 @@ This app transforms a standard smartphone into a physics laboratory. It detects 
 ## 🎥 Demo Preview
 
 <div align="center">
-  <a href="https://github.com/user-attachments/assets/50881ec2-5be9-48f1-9981-6fc0b651b14e">
-    <video src="https://github.com/user-attachments/assets/50881ec2-5be9-48f1-9981-6fc0b651b14e" width="400" />
+  <a href="https://github.com/user-attachments/assets/be8aa70c-29dc-4ab6-852a-dd440a6026f1">
+    <video src="https://github.com/user-attachments/assets/be8aa70c-29dc-4ab6-852a-dd440a6026f1" width="400" />
   </a>
 </div>
 ### Key Features
